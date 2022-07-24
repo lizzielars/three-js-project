@@ -1,0 +1,627 @@
+<script>
+/**
+*
+* @author Elizabeth Larson
+* Date: 02/24/22
+* Project: Project 3 - Three js Project
+* Description: This file displays a webpage of a 
+* 3d animation consisting of a small world with rocks, a tree,
+* and a flower. The background is made up of a sky where half
+* of the sky is in daylight with clouds and a sun, and the other
+* half is a night sky with a moon and stars. The webpage also 
+* contains two checkboxes that will either rotate the sky or
+* rotate the mini-planet. This project was created with the 
+* help of the modeling-starter.html file.
+* 
+*/
+</script>
+
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<title>Three.js Project</title>
+<style>
+</style>
+<script src="three.min.js"></script>
+<script>
+
+"use strict";
+
+var scene, camera, renderer;  // Three.js rendering basics.
+
+var canvas;  // The canvas on which the image is rendered.
+var sky; // The background sky
+var skyRotator;  // Used to rotate the sky         
+var worldRotator; // Used to rotate the world
+var animatingSky = false;  // This is set to true when an animation is running.
+var animatingWorld = false; // This is set to true when an animation is running.
+
+// This class creates a cloud object
+ class Cloud {
+	constructor(params) {
+		this.params = {
+				x:0,
+				y:0,
+				z:0
+		}
+		this.object = new THREE.Object3D();
+		this.object.position.x = this.params.x;
+		this.object.position.y = this.params.y;
+		this.object.position.z = this.params.z;
+		skyRotator.add(this.object);
+	}
+	
+	createCloud(){
+		
+		var cloudGeometry = new THREE.SphereGeometry( 0.25, 32, 16 );
+		var cloud = new THREE.Mesh(
+				cloudGeometry,
+			new THREE.MeshPhongMaterial({
+			    color: 0xF3F3F3,
+				specular: 0x101010,		
+			})
+		);
+		
+		cloud.position.y = 3.4;
+		cloud.position.x = 3.5;
+		this.object.add(cloud);
+		
+		var cloud1Geometry = new THREE.SphereGeometry( 0.22, 32, 16 );
+		var cloud1 = new THREE.Mesh(
+				cloud1Geometry,
+			new THREE.MeshPhongMaterial({
+			    color: 0xF3F3F3,
+				specular: 0x101010,		
+			})
+		);
+		
+		cloud1.position.y = 3.2;
+		cloud1.position.x = 3.25;
+		this.object.add(cloud1);
+		
+		var cloud2Geometry = new THREE.SphereGeometry( 0.22, 32, 16 );
+		var cloud2 = new THREE.Mesh(
+				cloud2Geometry,
+			new THREE.MeshPhongMaterial({
+			    color: 0xF3F3F3,
+				specular: 0x101010,		
+			})
+		);
+		
+		cloud2.position.y = 3.2;
+		cloud2.position.x = 3.5;
+		this.object.add(cloud2);
+		
+		var cloud3Geometry = new THREE.SphereGeometry( 0.22, 32, 16 );
+		var cloud3 = new THREE.Mesh(
+				cloud3Geometry,
+			new THREE.MeshPhongMaterial({
+			    color: 0xF3F3F3,
+				specular: 0x101010,		
+			})
+		);
+		
+		cloud3.position.y = 3.2;
+		cloud3.position.x = 3.75;
+		this.object.add(cloud3);
+		
+	}
+	
+	init(){
+		this.createCloud();
+	}
+
+}
+
+// This class creates a star object
+ class Star {
+		constructor(params) {
+			this.params = {
+					x:0,
+					y:0,
+					z:0
+			}
+			this.object = new THREE.Object3D();
+			this.object.position.x = this.params.x;
+			this.object.position.y = this.params.y;
+			this.object.position.z = this.params.z;
+			skyRotator.add(this.object);
+		}
+		
+		createStar(){
+			
+			var starGeometry = new THREE.OctahedronGeometry( 0.1, 0 );
+			var star = new THREE.Mesh(
+					starGeometry,
+				new THREE.MeshPhongMaterial({
+				    color: 0xFCF1A8,
+					specular: 0x101010,		
+				})
+			);
+			star.position.y = -3.4;
+			star.position.x = -3.5;
+			this.object.add(star);
+			
+		}
+		
+		init(){
+			this.createStar();
+		}
+
+	}
+ 
+// This function creates the split screen sky
+function createSky(){
+	
+	 const dayGeometry = new THREE.PlaneGeometry(20,20);
+	 const dayMaterial = new THREE.MeshBasicMaterial({color: 0x75CDE1});
+	 const dayPlane = new THREE.Mesh(dayGeometry, dayMaterial);
+	 dayPlane.position.y = 10;
+	 
+	 skyRotator.add(dayPlane);
+	
+	const nightGeometry = new THREE.PlaneGeometry(20,20);
+	const nightMaterial = new THREE.MeshBasicMaterial({color: 0x00203E});
+	const nightPlane = new THREE.Mesh(nightGeometry, nightMaterial);
+	nightPlane.position.y = -10;
+	skyRotator.add(nightPlane);
+	
+}
+
+// This function creates the rotating planet
+function createPlanet(){
+	
+
+	const planet =  new THREE.Mesh(  
+	    new THREE.SphereGeometry(2,32,16),
+		new THREE.MeshPhongMaterial({ color: 0x94BC60 })
+	);
+
+	const hill1 =  new THREE.Mesh(  
+			new THREE.SphereGeometry(1,32,16),
+		new THREE.MeshPhongMaterial({ color: 0x87AD56 })
+	);
+	hill1.position.y = 1.25;
+	
+	const hill2 =  new THREE.Mesh(  
+			new THREE.SphereGeometry(1,32,16),
+		new THREE.MeshPhongMaterial({ color: 0x729446 })
+	);
+	hill2.position.y = 1;
+	hill2.position.x = 0.5;
+
+	
+	const hill4 =  new THREE.Mesh(  
+			new THREE.SphereGeometry(1,32,16),
+		new THREE.MeshPhongMaterial({ color: 0x87AD56 })
+	);
+	hill4.position.y = -0.6;
+	hill4.position.x = -0.1;
+	hill4.position.z = 0.9;
+	
+	const hill5 =  new THREE.Mesh(  
+			new THREE.SphereGeometry(1,32,16),
+		new THREE.MeshPhongMaterial({ color: 0x6C9040 })
+	);
+
+	hill5.position.y = -1;
+	hill5.position.x = 0.25;
+	hill5.position.z = 0.5;
+	
+	const rock = new THREE.Mesh(new THREE.CylinderGeometry(0,1,1.4,3,false), new THREE.MeshLambertMaterial({color: 0x949181}));
+	
+	rock.position.y = 1;
+	rock.position.x = -1.25;
+	rock.position.z = 0.5;
+	worldRotator.add(rock);
+	
+	const rock2 = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshLambertMaterial({color: 0x949181}));
+	rock2.castShadow = true;
+	rock2.position.x = 1.25;
+	rock2.position.z = 0.75;
+	rock2.rotation.z = 0.5;
+
+	worldRotator.add(rock2);
+	
+	const rock3 = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), new THREE.MeshLambertMaterial({color: 0x949181}));
+	rock3.castShadow = true;
+	rock3.position.x =0.75;
+	rock3.position.y = 0.25;
+	rock3.position.z = 1.75;
+
+	rock3.rotation.y = 1;
+	rock3.rotation.z = 0.5;
+	worldRotator.add(rock3);
+	
+	worldRotator.add(planet);
+	worldRotator.add(hill1);
+	worldRotator.add(hill2);
+	worldRotator.add(hill4);
+	worldRotator.add(hill5);
+	
+}
+
+// Creates a moon object
+function createMoon(){
+	
+	var moonGeometry = new THREE.SphereGeometry( 0.5, 32, 16 );
+	var moon = new THREE.Mesh(
+			moonGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xC2C2C2,
+			specular: 0x101010,		
+		})
+	);
+	moon.position.y = -5;
+	skyRotator.add(moon);
+	
+}
+
+// Creates a tree for the planet
+function createTree(){
+	
+	var trunkGeometry = new THREE.CylinderGeometry( 0.15, 0.15, 1.8, 32,16 );
+	var trunk = new THREE.Mesh(
+			trunkGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0x6B5002,
+			specular: 0x101010,		
+		})
+	);
+	trunk.position.y = -2;
+	worldRotator.add(trunk);
+	
+	var treeGeometry = new THREE.SphereGeometry( 0.25, 32, 16 );
+	var tree = new THREE.Mesh(
+			treeGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0x77C64D,
+			specular: 0x101010,		
+		})
+	);
+	tree.position.y = -3.5;
+	worldRotator.add(tree);
+	
+	var tree1Geometry = new THREE.SphereGeometry( 0.25, 32, 16 );
+	var tree1 = new THREE.Mesh(
+			tree1Geometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0x77C64D,
+			specular: 0x101010,		
+		})
+	);
+	tree1.position.y = -3.1;
+	worldRotator.add(tree1);
+	
+	var tree2Geometry = new THREE.SphereGeometry( 0.25, 32, 16 );
+	var tree2 = new THREE.Mesh(
+			tree2Geometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0x77C64D,
+			specular: 0x101010,		
+		})
+	);
+	tree2.position.y = -3.25;
+	tree2.position.x = -0.25;
+	worldRotator.add(tree2);
+	
+	var tree3Geometry = new THREE.SphereGeometry( 0.25, 32, 16 );
+	var tree3 = new THREE.Mesh(
+			tree3Geometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0x77C64D,
+			specular: 0x101010,		
+		})
+	);
+	tree3.position.y = -3.25;
+	tree3.position.x = 0.25;
+	worldRotator.add(tree3);	
+	
+}
+
+// Creates a flower for the planet
+function createFlower(){
+	
+	var stemGeometry = new THREE.CylinderGeometry( 0.02, 0.02, 0.9, 32,16 );
+	var stem = new THREE.Mesh(
+			stemGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0x526B02,
+			specular: 0x101010,		
+		})
+	);
+	stem.position.y = 2;
+	worldRotator.add(stem);
+	
+	var pedalGeometry = new THREE.SphereGeometry( 0.1, 32, 16 );
+	var pedal = new THREE.Mesh(
+			pedalGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFFF000,
+			specular: 0x101010,		
+		})
+	);
+	pedal.position.y = 2.65;
+	worldRotator.add(pedal);
+	
+	var pedal1 = new THREE.Mesh(
+			pedalGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFF9B00,
+			specular: 0x101010,		
+		})
+	);
+	pedal1.position.y = 2.5;
+	pedal1.position.x = 0.1;
+	worldRotator.add(pedal1);
+	
+	var pedal2 = new THREE.Mesh(
+			pedalGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFF9B00,
+			specular: 0x101010,		
+		})
+	);
+	pedal2.position.y = 2.5;
+	pedal2.position.x = -0.1;
+	worldRotator.add(pedal2);
+	
+	var pedal3 = new THREE.Mesh(
+			pedalGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFF9B00,
+			specular: 0x101010,		
+		})
+	);
+	pedal3.position.y = 2.7;
+	pedal3.position.x = -0.15;
+	worldRotator.add(pedal3);
+	
+	var pedal4 = new THREE.Mesh(
+			pedalGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFF9B00,
+			specular: 0x101010,		
+		})
+	);
+	pedal4.position.y = 2.7;
+	pedal4.position.x = 0.15;
+	worldRotator.add(pedal4);	
+	
+	var pedal5 = new THREE.Mesh(
+			pedalGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFF9B00,
+			specular: 0x101010,		
+		})
+	);
+	pedal5.position.y = 2.8;
+	worldRotator.add(pedal5);	
+	
+}
+
+// This function creates the entire animation
+function createWorld() {
+    renderer.setClearColor( 0x000000 );  
+	scene = new THREE.Scene();
+	
+	// create a camera, sitting on the positive z-axis.  The camera is not part of the scene.
+	camera = new THREE.PerspectiveCamera(45, canvas.width/canvas.height, 1, 30);
+	camera.position.z = 15;
+	
+    // create light coming from sun
+	var viewpointLight = new THREE.PointLight( 0xFFF9AE, 1.2,0,2 );  
+	viewpointLight.position.set(0,4.15,2);  
+	
+    // create light coming from moon
+	var viewpointLight2 = new THREE.PointLight( 0xffffff, 0.5,0,2 );
+	viewpointLight2.position.set(0,-4.15,2);
+
+	
+
+	// Create 3d sun
+	var sunGeometry = new THREE.SphereGeometry( 0.5, 32, 16 );
+	var sun = new THREE.Mesh(
+			sunGeometry,
+		new THREE.MeshPhongMaterial({
+		    color: 0xFFEC64,
+			specular: 0x101010,
+			shininess: 32,		
+		})
+	);
+	sun.position.y = 5;
+	
+	// Initial skyRotator object and add lights to it
+	skyRotator = new THREE.Object3D();
+	skyRotator.add(sun);
+	skyRotator.add(viewpointLight);
+	skyRotator.add(viewpointLight2);
+	
+	// Initialize worldRotator object
+	worldRotator = new THREE.Object3D();
+
+	// Create shapes for the animation
+	createSky();
+	createPlanet();
+	createMoon();
+	createTree();
+	createFlower();
+	
+	const cloud = new Cloud({x:0, y:0, z: 0});
+	cloud.init();
+	
+	const cloud1 = new Cloud({x:-1, y:0, z: 0});
+	cloud1.object.position.x = -8;
+	cloud1.object.position.y = -2;
+	cloud1.init();
+	
+	const cloud2 = new Cloud({x:-1, y:0, z: 0});
+	cloud2.object.position.x = -6;
+	cloud2.object.position.y = 2;
+	cloud2.init();
+	
+	const star = new Star({x:0, y:0, z:0});
+	star.init();
+	
+	const star1 = new Star({x:0, y:0, z:0});
+	star1.object.position.x = -1;
+	star1.object.position.y = 2;
+	star1.init();
+	
+	const star2 = new Star({x:0, y:0, z:0});
+	star2.object.position.x = 1.5;
+	star2.object.position.y = 1.5;
+	star2.init();
+	
+	const star3 = new Star({x:0, y:0, z:0});
+	star3.object.position.x = -1.5;
+	star3.object.position.y = -2;
+	star3.init();
+	
+	const star4 = new Star({x:0, y:0, z:0});
+	star4.object.position.x = 6;
+	star4.object.position.y = -2;
+	star4.init();
+	
+	const star5 = new Star({x:0, y:0, z:0});
+	star5.object.position.x = 5.5;
+	star5.object.position.y = 2;
+	star5.init();
+	
+	const star6 = new Star({x:0, y:0, z:0});
+	star6.object.position.x = 7;
+	star6.init();
+	
+	const star7 = new Star({x:0, y:0, z:0});
+	star7.object.position.x = 9;
+	star7.object.position.y = 1.5;
+
+	star7.init();
+	
+	const star8 = new Star({x:0, y:0, z:0});
+	star8.object.position.x = 8.5;
+	star8.object.position.y = -1.5;
+
+	star8.init();
+
+	// Add rotator objects to the scene
+	scene.add(skyRotator);
+	scene.add(worldRotator);
+
+}
+
+/*  Render the scene.  This is called for each frame of the animation.
+ */
+function render() {
+    renderer.render(scene, camera);
+}
+
+
+/*  When an animation is in progress, this function is called just before rendering each
+ *  frame of the animation, to make any changes necessary in the scene graph to prepare
+ *  for that frame.
+ */
+function updateSkyFrame() {
+	 skyRotator.rotation.z += 0.01;
+}
+
+function updateWorldFrame() {
+	 worldRotator.rotation.z -= 0.01;
+}
+
+
+//--------------------------- animation support -----------------------------------
+
+/* This function runs the animation by calling updateForFrame() then calling render().
+ * Finally, it arranges for itself to be called again to do the next frame.  When the
+ * value of animating is set to false, this function does not schedule the next frame,
+ * so the animation stops.
+ */
+function doSkyFrame() {
+    if (animatingSky) {
+    	updateSkyFrame();
+        render();
+        requestAnimationFrame(doSkyFrame); 
+	}
+}
+ 
+function doWorldFrame() {
+	   if (animatingWorld) {
+	   	updateWorldFrame();
+	   	render();
+	    requestAnimationFrame(doWorldFrame); 
+	}
+}
+
+
+/* Responds when the setting of the "Animate" checkbox is changed.  This
+ * function will start or stop the animation, depending on its setting.
+ */
+function doAnimateSkyCheckbox() {
+    var anim = document.getElementById("animateSky").checked;
+	if (anim != animatingSky) {
+		animatingSky = anim;
+		if (animatingSky) {
+			doSkyFrame();
+		}
+	}
+}
+
+function doAnimateWorldCheckbox() {
+	
+	var anim2 = document.getElementById("animateWorld").checked;
+	if (anim2 != animatingWorld) {
+		animatingWorld = anim2;
+		if (animatingWorld) {
+			doWorldFrame();
+		}
+	}
+}
+
+//----------------------------------------------------------------------------------
+
+/**
+ *  This init() function is called when by the onload event when the document has loaded.
+ */
+function init() {
+	try {
+	    canvas = document.getElementById("glcanvas");
+		renderer = new THREE.WebGLRenderer( {
+		    canvas: canvas,
+		    antialias: true
+		} );
+	}
+	catch (e) {
+		document.getElementById("canvas-holder").innerHTML =
+		         "<h3><b>Sorry, WebGL is required but is not available.</b><h3>";
+		return;
+	}
+	document.getElementById("animateSky").checked = false;
+	document.getElementById("animateSky").onchange = doAnimateSkyCheckbox;
+	
+	document.getElementById("animateWorld").checked = false;
+	document.getElementById("animateWorld").onchange = doAnimateWorldCheckbox;
+	createWorld();
+	render();
+}
+
+</script>
+</head>
+<body onload="init()">
+
+<h2>Three.js Project</h2>
+
+<p><b>Check the boxes below to start rotating the sky and/or world.</b></p>
+
+<p><label><input type="checkbox" id = "animateSky" name = "animationType">Rotate Sky</label>
+</p>
+
+<p><label><input type="checkbox" id="animateWorld" name = "animationType">Rotate World</label>
+</p>
+
+<div id="canvas-holder">
+<canvas id="glcanvas" width="800" height="800"></canvas>
+</div>
+
+</body>
+</html>
